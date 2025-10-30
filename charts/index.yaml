@@ -3,6 +3,17 @@ entries:
   statefulset-app:
   - apiVersion: v2
     appVersion: "1.0"
+    created: "2025-10-30T02:48:48.999622236Z"
+    description: A Helm chart for deploying applications with StatefulSet and per-pod
+      PVCs
+    digest: d3c876e30dc8cb5c8f63ee831f5b2ee9b63029f6d02a7289aea8b0dab4c73fff
+    name: statefulset-app
+    type: application
+    urls:
+    - https://DaviPtrs.github.io/generic-statefulset-chart/charts/statefulset-app-0.0.2.tgz
+    version: 0.0.2
+  - apiVersion: v2
+    appVersion: "1.0"
     created: "2025-10-30T02:41:05.251324901Z"
     description: A Helm chart for deploying applications with StatefulSet and per-pod
       PVCs
@@ -12,4 +23,4 @@ entries:
     urls:
     - https://DaviPtrs.github.io/generic-statefulset-chart/charts/statefulset-app-0.0.1.tgz
     version: 0.0.1
-generated: "2025-10-30T02:41:05.249773699Z"
+generated: "2025-10-30T02:48:48.999057778Z"
