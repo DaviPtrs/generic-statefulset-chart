@@ -1,0 +1,73 @@
+# Default values for statefulset-app
+
+name: statefulset-app
+replicaCount: 1
+
+image:
+  repository: nginx
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: false
+  automount: false
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podLabels: {}
+podSecurityContext: {}
+securityContext: {}
+
+containerPort: 80
+
+service:
+  enabled: true
+  type: ClusterIP
+  port: 80
+  annotations: {}
+
+ingress:
+  enabled: false
+  className: nginx
+  annotations: {}
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+resources: {}
+
+# Environment variables
+env: []
+envFrom: []
+
+# Probes
+livenessProbe: {}
+readinessProbe: {}
+
+# Volumes and mounts
+volumeMounts: []
+volumes: []
+
+# Volume Claim Templates for StatefulSet
+volumeClaimTemplates: []
+
+# StatefulSet configuration
+updateStrategy:
+  type: RollingUpdate
+  rollingUpdate:
+    partition: 0
+
+podManagementPolicy: OrderedReady
+serviceName: ""
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
