@@ -1,4 +1,10 @@
-# StatefulSet App Helm Chart
+{{ template "chart.header" . }}
+
+{{ template "chart.deprecationWarning" . }}
+
+{{ template "chart.badgesSection" . }}
+
+{{ template "chart.description" . }}
 
 A flexible Helm chart for deploying applications using Kubernetes StatefulSets with per-pod persistent volumes via `volumeClaimTemplates`.
 
@@ -21,7 +27,25 @@ Use StatefulSets when you need:
 
 The key advantage over Deployments with shared PVCs is that each pod in a StatefulSet gets its own PVC automatically, perfect for applications that need per-instance storage (logs, caches, databases, etc.).
 
+{{ template "chart.homepageLine" . }}
+
+{{ template "chart.maintainersSection" . }}
+
+{{ template "chart.sourcesSection" . }}
+
+{{ template "chart.requirementsSection" . }}
+
 ## Installation
+
+### Install from Helm repository
+
+```bash
+helm repo add generic-statefulset https://daviptrs.github.io/generic-statefulset-chart/charts
+helm repo update
+
+# Install the chart
+helm install my-app generic-statefulset/statefulset-app
+```
 
 ### Install from local chart
 
@@ -36,49 +60,9 @@ helm install my-app ./statefulset-app -f my-values.yaml
 helm install my-app ./statefulset-app -n production --create-namespace
 ```
 
-### Install from Helm repository
-
-```bash
-# Add the repository
-helm repo add generic-statefulset https://daviptrs.github.io/generic-statefulset-chart/charts
-helm repo update
-
-# Install the chart
-helm install my-app generic-statefulset/statefulset-app
-```
-
 ### Using with Terraform
 
 From Helm repository:
-
-```hcl
-resource "helm_release" "my_app" {
-  name       = "my-app"
-  repository = "https://daviptrs.github.io/generic-statefulset-chart/charts"
-  chart      = "statefulset-app"
-  namespace  = "production"
-
-  values = [
-    file("${path.module}/my-values.yaml")
-  ]
-}
-```
-
-Or from local path:
-
-```hcl
-resource "helm_release" "my_app" {
-  name       = "my-app"
-  chart      = "${path.module}/statefulset-app"
-  namespace  = "production"
-
-  values = [
-    file("${path.module}/my-values.yaml")
-  ]
-}
-```
-
-With inline values:
 
 ```hcl
 resource "helm_release" "my_api" {
@@ -87,9 +71,6 @@ resource "helm_release" "my_api" {
   chart            = "statefulset-app"
   namespace        = "production"
   create_namespace = true
-  upgrade_install  = true
-  wait             = true
-  wait_for_jobs    = true
 
   values = [
     yamlencode({
@@ -100,8 +81,6 @@ resource "helm_release" "my_api" {
         repository = "mycompany/my-api"
         tag        = "v1.0.0"
       }
-
-      containerPort = 8080
 
       volumeClaimTemplates = [
         {
@@ -126,224 +105,12 @@ resource "helm_release" "my_api" {
           mountPath = "/var/log/app"
         }
       ]
-
-      env = [
-        {
-          name  = "PORT"
-          value = "8080"
-        },
-        {
-          name  = "LOG_LEVEL"
-          value = "INFO"
-        },
-        {
-          name  = "DATABASE_URL"
-          value = "postgres://db:5432/mydb"
-        }
-      ]
-
-      resources = {
-        limits = {
-          cpu    = "500m"
-          memory = "1Gi"
-        }
-        requests = {
-          cpu    = "250m"
-          memory = "512Mi"
-        }
-      }
-
-      livenessProbe = {
-        httpGet = {
-          path = "/health"
-          port = "http"
-        }
-        initialDelaySeconds = 30
-        periodSeconds       = 10
-      }
-
-      readinessProbe = {
-        httpGet = {
-          path = "/ready"
-          port = "http"
-        }
-        initialDelaySeconds = 10
-        periodSeconds       = 10
-      }
-
-      ingress = {
-        enabled   = true
-        className = "nginx"
-        annotations = {
-          "cert-manager.io/cluster-issuer"                 = "letsencrypt-prod"
-          "nginx.ingress.kubernetes.io/ssl-redirect"       = "true"
-          "nginx.ingress.kubernetes.io/force-ssl-redirect" = "true"
-        }
-        hosts = [
-          {
-            host = "api.example.com"
-            paths = [
-              {
-                path     = "/"
-                pathType = "Prefix"
-              }
-            ]
-          }
-        ]
-        tls = [
-          {
-            secretName = "api-tls"
-            hosts      = ["api.example.com"]
-          }
-        ]
-      }
     })
   ]
 }
 ```
 
-## Configuration
-
-### Key Parameters
-
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `name` | Application name | `statefulset-app` |
-| `replicaCount` | Number of replicas | `1` |
-| `image.repository` | Container image repository | `nginx` |
-| `image.tag` | Container image tag | `latest` |
-| `containerPort` | Container port | `80` |
-| `service.enabled` | Enable service | `true` |
-| `service.type` | Service type | `ClusterIP` |
-| `service.port` | Service port | `80` |
-| `volumeClaimTemplates` | PVC templates for StatefulSet | `[]` |
-| `volumeMounts` | Volume mounts for container | `[]` |
-| `ingress.enabled` | Enable ingress | `false` |
-
-### Volume Claim Templates
-
-The most important feature of this chart is support for `volumeClaimTemplates`, which creates a PVC for each pod:
-
-```yaml
-volumeClaimTemplates:
-  - metadata:
-      name: data
-    spec:
-      accessModes:
-        - ReadWriteOnce
-      storageClassName: standard
-      resources:
-        requests:
-          storage: 10Gi
-  - metadata:
-      name: logs
-    spec:
-      accessModes:
-        - ReadWriteOnce
-      storageClassName: standard
-      resources:
-        requests:
-          storage: 5Gi
-```
-
-Don't forget to mount these volumes:
-
-```yaml
-volumeMounts:
-  - name: data
-    mountPath: /data
-  - name: logs
-    mountPath: /var/log/app
-```
-
-### Environment Variables
-
-```yaml
-env:
-  - name: PORT
-    value: "8080"
-  - name: LOG_LEVEL
-    value: "INFO"
-  - name: DATABASE_URL
-    value: "postgres://db:5432/mydb"
-
-# Or from ConfigMap/Secret
-envFrom:
-  - configMapRef:
-      name: app-config
-  - secretRef:
-      name: app-secrets
-```
-
-### Health Probes
-
-```yaml
-livenessProbe:
-  httpGet:
-    path: /health
-    port: http
-  initialDelaySeconds: 30
-  periodSeconds: 10
-  timeoutSeconds: 5
-  failureThreshold: 3
-
-readinessProbe:
-  httpGet:
-    path: /ready
-    port: http
-  initialDelaySeconds: 10
-  periodSeconds: 10
-  timeoutSeconds: 5
-  failureThreshold: 3
-```
-
-### Ingress
-
-```yaml
-ingress:
-  enabled: true
-  className: nginx
-  annotations:
-    cert-manager.io/cluster-issuer: "letsencrypt-prod"
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
-  hosts:
-    - host: myapp.example.com
-      paths:
-        - path: /
-          pathType: Prefix
-  tls:
-    - secretName: myapp-tls
-      hosts:
-        - myapp.example.com
-```
-
-### Resources
-
-```yaml
-resources:
-  limits:
-    cpu: 500m
-    memory: 1Gi
-  requests:
-    cpu: 250m
-    memory: 512Mi
-```
-
-### Security Context
-
-```yaml
-podSecurityContext:
-  runAsNonRoot: true
-  runAsUser: 1000
-  fsGroup: 1000
-
-securityContext:
-  allowPrivilegeEscalation: false
-  readOnlyRootFilesystem: true
-  capabilities:
-    drop:
-      - ALL
-```
+{{ template "chart.valuesSection" . }}
 
 ## Common Use Cases
 
@@ -473,11 +240,6 @@ Check that your storage class exists:
 kubectl get storageclass
 ```
 
-If using a cloud provider, ensure the storage class is properly configured:
-```bash
-kubectl describe storageclass <storage-class-name>
-```
-
 ### Pods stuck in Pending
 
 Check PVC status:
@@ -506,19 +268,6 @@ kubectl delete pvc <pvc-name>
 kubectl scale statefulset <name> --replicas=3
 ```
 
-### Rolling updates stuck
-
-If a rolling update is stuck, check the update strategy:
-
-```bash
-kubectl describe statefulset <name>
-```
-
-You can manually force deletion of stuck pods:
-```bash
-kubectl delete pod <pod-name> --force --grace-period=0
-```
-
 ## Best Practices
 
 1. **Always set resource limits** to prevent resource exhaustion
@@ -530,10 +279,4 @@ kubectl delete pod <pod-name> --force --grace-period=0
 7. **Use podManagementPolicy: Parallel** only if your app can handle it
 8. **Always configure backups** for important data in PVCs
 
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## License
-
-MIT
+{{ template "chart.valuesTableHtml" . }}
